@@ -18,6 +18,7 @@ class Criterion(StrictModel):
 class Question(StrictModel):
     id: str = Field(pattern=r"^Q[1-9][0-9]*$")
     text: str = ""
+    answer: str = ""
     max: float = Field(gt=0)
     type: Literal["descriptive", "mcq"] = "descriptive"
     optional_group: str | None = None

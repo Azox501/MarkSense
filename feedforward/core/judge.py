@@ -33,7 +33,7 @@ def grader_client() -> genai.Client:
 
 def context(question: Question, answer: str, evidence: list[Evidence]) -> str:
     """Include criterion IDs/descriptions without asking the model to calculate marks."""
-    rubric = {"question_id": question.id, "question_text": question.text,
+    rubric = {"question_id": question.id, "question_text": question.text, "expected_answer": question.answer,
               "criteria": [{"id": c.id, "name": c.name, "description": c.description} for c in question.criteria]}
     return json.dumps({"rubric": rubric, "teacher_evidence": [d.as_dict() for d in evidence],
                        "student_answer": answer}, ensure_ascii=False)
