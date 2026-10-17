@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from core.cache import validated_call
+from core.cache import request_error, validated_call
 from core.config import AppError, get_settings
 
 
@@ -27,3 +27,17 @@ def test_cache(tmp_path, monkeypatch):
         assert validated_call("model", "prompt", [b"image"], Result, generate).text == "cached"
     assert len(calls) == 1
     get_settings.cache_clear()
+
+
+@pytest.mark.parametrize(("code", "message"), [
+    (401, "rejected the API key"),
+    (403, "rejected the API key"),
+    (429, "quota is currently exhausted"),
+    (503, "temporarily unavailable"),
+    (None, "connection and Gemini API settings"),
+])
+def test_request_error_explains_safe_provider_status(code, message):
+    error = Exception("provider response")
+    if code is not None:
+        error.code = code
+    assert message in str(request_error(error))

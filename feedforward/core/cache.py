@@ -14,6 +14,24 @@ from core.config import AppError, get_settings
 T = TypeVar("T", bound=BaseModel)
 
 
+def request_error(exc: Exception) -> AppError:
+    """Turn provider failures into actionable, credential-safe messages."""
+    code = getattr(exc, "code", getattr(exc, "status_code", None))
+    if callable(code):
+        code = code()
+    try:
+        code = int(code)
+    except (TypeError, ValueError):
+        pass
+    if code in {401, 403}:
+        return AppError("Gemini Vision rejected the API key. Update GEMINI_VISION_API_KEY, restart Streamlit, then retry.")
+    if code == 429:
+        return AppError("Gemini Vision quota is currently exhausted. Check your Gemini quota, wait a little, then retry.")
+    if isinstance(code, int) and 500 <= code < 600:
+        return AppError("Gemini Vision is temporarily unavailable. Please retry in a few minutes.")
+    return AppError("Gemini Vision could not complete this request. Check your connection and Gemini API settings, then retry.")
+
+
 def cache_key(model: str, prompt: str, images: list[bytes], schema: dict[str, Any]) -> str:
     """Hash all request inputs without storing credentials."""
     payload = [model, prompt, [hashlib.sha256(i).hexdigest() for i in images], schema]
@@ -36,9 +54,11 @@ def validated_call(model: str, prompt: str, images: list[bytes], schema: type[T]
                         break
                     except Exception as exc:
                         code = getattr(exc, "code", getattr(exc, "status_code", None))
+                        if callable(code):
+                            code = code()
                         transient = str(code) == "429" or str(code).startswith("5")
                         if not transient or attempt == 3:
-                            raise AppError("Gemini could not complete this request. Check your keys, quota and connection, then retry.") from exc
+                            raise request_error(exc) from exc
                         time.sleep(2 ** attempt + random.uniform(0, 0.25))
             try:
                 result = schema.model_validate_json(raw)
