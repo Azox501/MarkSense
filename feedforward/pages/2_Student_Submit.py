@@ -9,11 +9,11 @@ from core.db import Assignment, Enrollment, Submission, session_scope
 from core.schemas import Rubric, Transcript, TranscribedAnswer
 from core.submissions import create_submission, save_transcript, student_submission
 from core.transcribe import transcribe_pdf
-from core.ui import friendly_errors, guard
+from core.ui import empty_state, friendly_errors, guard, page_header
 
 st.set_page_config(page_title="MarkSense | Submit work", layout="wide")
 student = guard("student")
-st.title("Submit work")
+page_header("Your next great attempt.", "Join your classroom, check your work, and submit when you're ready.", "STUDENT WORKSPACE")
 with st.form("join"):
     code = st.text_input("Classroom join code")
     if st.form_submit_button("Join classroom"):
@@ -24,7 +24,7 @@ with session_scope() as session:
     assignments = list(session.scalars(select(Assignment).join(Enrollment,
         Enrollment.classroom_id == Assignment.classroom_id).where(Enrollment.student_id == student.id)))
 if not assignments:
-    st.info("Join a classroom with an assignment to begin.")
+    empty_state("Let's find your classroom", "Enter the six-character code your teacher shared. Your assignments will appear here.")
     st.stop()
 assignment = st.selectbox("Assignment", assignments, format_func=lambda a: f"{a.title} (classroom {a.classroom_id})")
 st.caption("Draft gives conceptual hints. Final goes to your teacher for review.")

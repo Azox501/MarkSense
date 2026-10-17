@@ -8,15 +8,15 @@ from core.db import Assignment, AuditLog, Classroom, CriterionResult, IntegrityR
 from core.export import export_bytes, final_sheet
 from core.review import approve, change_question, exam_result, reject, teacher_submission
 from core.schemas import Rubric, Transcript
-from core.ui import friendly_errors, guard
+from core.ui import empty_state, friendly_errors, guard, page_header
 
 st.set_page_config(page_title="MarkSense | Teacher review", layout="wide")
 teacher = guard("teacher")
-st.title("Review and approve")
+page_header("Review with the full picture.", "Read the answer, inspect the evidence, and give every result your final say.", "TEACHER WORKSPACE")
 with session_scope() as session:
     assignments = list(session.scalars(select(Assignment).join(Classroom).where(Classroom.teacher_id == teacher.id)))
 if not assignments:
-    st.info("Create an assignment first.")
+    empty_state("Ready when your class is", "Create an assignment in Classrooms & assignments. Submitted work will appear here for review.")
     st.stop()
 assignment = st.selectbox("Assignment", assignments, format_func=lambda a: f"{a.title} (classroom {a.classroom_id})")
 show_history = st.checkbox("Include approved and rejected attempts")

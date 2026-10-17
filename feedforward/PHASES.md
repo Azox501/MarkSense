@@ -2,6 +2,16 @@
 
 Acceptance results distinguish implementation checks from live checks. No Gemini call is fabricated.
 
+## Interface update — separate teacher and student workspaces
+
+- Replaced the automatic `pages/` directory menu with authenticated `st.navigation` registration. Teacher sessions register only Overview, Classrooms & assignments, and Review & results. Student sessions register only My workspace, Submit work, and My feedback. Signed-out sessions register only account entry.
+- Added a single role-aware sign-in, registration that opens the selected workspace after committing the account, and sign-out that clears session state.
+- Added separate dashboards with account-scoped counts, actionable links and real empty states. Classroom setup is organized into settings, materials and assignments tabs.
+- Removed the permanent demo banner and demo-first onboarding per the user's request. Sample seeding is now documented as optional. Existing local accounts and work were preserved; nothing is automatically populated for a new account.
+- Added a responsive local CSS theme and SVG brand assets, teal sidebar, clearer headings, cards, forms and account identity. No external font or image services are used.
+- PASS: 33 tests, including six role/navigation/account UI regressions. These cover signed-out visibility, disjoint routes, scoped dashboard counts, both account roles, forbidden page switching, registration and session clearing on logout.
+- PASS: browser checks of teacher dashboard and tabbed setup, student dashboard, role-only sidebars, and narrow account layout. No Gemini calls were made.
+
 ## Current status — 2026-10-17, after hotspot setup
 
 The phase entries below retain the original build history. This section supersedes their earlier installation/test blockers.

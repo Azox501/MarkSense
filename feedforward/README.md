@@ -1,10 +1,20 @@
 # MarkSense
 
-Local, teacher-reviewed diagnostic grading. AI judges with evidence, Python computes marks, and teachers approve every released score.
+An assessment workspace with separate teacher and student interfaces. AI judges with evidence, Python computes marks, and teachers approve every released score.
+
+## Your workspace
+
+Sign in once using your own account. MarkSense automatically opens the interface for your account role; there is no role switch on the signed-in screen.
+
+- **Teachers:** Overview, Classrooms & assignments, Review & results. Create classrooms, enroll students, add teaching resources and rubrics, review evidence, approve scores and export results.
+- **Students:** My workspace, Submit work, My feedback. Join a classroom, work through a draft or final submission, and read private hints and approved feedback.
+- **Before sign-in:** only account entry is available. The opposite role's routes are never registered in the session. Page guards and service ownership checks remain in place.
+
+The interface uses a shared local theme, responsive account layout, sidebar identity and navigation, and role-specific overview cards with live counts. Empty workspaces display onboarding guidance. No sample data is automatically created. Existing accounts, work and optional sample fixtures are preserved.
 
 ## Setup on Windows
 
-Use Python 3.11 or newer and PowerShell. Run these commands from the MarkSense folder. The development laptop has a Python 3.13.2 `.venv`, all dependencies, both BGE models and indexed demo data. Installation succeeded after switching to a mobile hotspot. All 27 pytest tests passed, and warm retrieval measured 0.85 seconds outside the execution sandbox. Its local `.env` is configured, but live Gemini API validity and the end-to-end API workflow remain unverified. A fresh clone needs its own keys and model download. Skip installation, downloads and seeding if reusing the prepared environment.
+Use Python 3.11 or newer and PowerShell. A fresh clone needs its own API keys and model download. The prepared development environment already has its dependencies, models and local configuration. Live Gemini API validity and the end-to-end API workflow remain unverified.
 
 ```powershell
 # Only if .venv does not already exist:
@@ -25,9 +35,7 @@ Manual configuration:
 # From the feedforward folder:
 ../.venv/Scripts/python.exe scripts/download_models.py
 ../.venv/Scripts/python.exe scripts/doctor.py
-../.venv/Scripts/python.exe scripts/seed_demo.py
 ../.venv/Scripts/python.exe -m pytest -q
-../.venv/Scripts/python.exe scripts/check_retrieval.py
 ../.venv/Scripts/python.exe -m streamlit run app.py
 ```
 
@@ -39,9 +47,19 @@ If installation reports `UnknownIssuer` or `CERTIFICATE_VERIFY_FAILED`, fix the 
 
 `doctor.py` checks package availability, key presence/distinctness and local model files without printing keys or calling any API. It returns a nonzero status when setup is incomplete. It does not verify API quota, key validity or model access.
 
-## Demo accounts and fixtures
+## Teacher and student workflows
 
-Run `seed_demo.py` after downloading models. It creates one teacher, four students, a classroom, a twenty-mark physics exam, three teacher resource PDFs and four submissions. It can be rerun without duplicating the fixtures.
+1. Create a teacher account and open **Classrooms & assignments**. Create a classroom, upload your teaching PDFs and create an assignment with validated criteria. Share the classroom code.
+2. Students create their own student accounts. In **Submit work**, they join using the code and select an assignment.
+3. Students upload a draft for conceptual guidance or a final attempt for assessment. They check and confirm the transcript before processing.
+4. Teachers open **Review & results**, inspect source evidence and peer similarity signals, and edit decisions with a reason where necessary. Only explicit approval releases a result.
+5. Students open **My feedback** to see draft hints, approved criterion reasons and a revision plan. Teachers download the approved-only CSV/XLSX from their review workspace.
+
+Use separate browser profiles/windows for simultaneous teacher and student sessions on one computer. Gemini receives uploaded page images and assessment prompts; use material you are authorized to process.
+
+## Optional sample fixtures for development
+
+Only run `seed_demo.py` if you want sample data for development. It is not part of normal setup or startup. It creates one teacher, four students, a classroom, a twenty-mark physics exam, three teacher resource PDFs and four submissions. It can be rerun without duplicating the fixtures. The fixture-specific retrieval benchmark is `python scripts/check_retrieval.py` after seeding.
 
 | Account | Email | Password |
 | --- | --- | --- |
@@ -57,7 +75,7 @@ The four seeded submissions have **prefilled fixture transcripts**, not invented
 
 `python scripts/seed_demo.py --fixtures-only` creates accounts and files without indexing. After model installation, rerun without that option. Resource PDFs are placed in `data/demo`; submission PDFs are in `data/uploads/<classroom>/<assignment>`.
 
-## Three-minute walkthrough
+## Optional sample walkthrough
 
 Prepare models, seed data and Gemini quota before the walkthrough. Process one final attempt in advance if API latency would interrupt the demo. Use a normal window for the teacher and a private window or different browser for a student.
 
@@ -68,7 +86,7 @@ Prepare models, seed data and Gemini quota before the walkthrough. Process one f
 
 ## How it works
 
-`app.py` handles local login and registration. Each page enforces the account role. Service functions also check teacher ownership, student enrollment and submission ownership.
+`app.py` registers pages with `st.navigation` based on the authenticated account. `core/access.py` handles sign-in and registration, `core/navigation.py` defines disjoint role routes, and `core/dashboard.py` renders their separate landing pages. Each page enforces the account role. Service functions also check teacher ownership, student enrollment and submission ownership.
 
 Teacher PDFs are parsed with PyMuPDF. Scanned pages use the vision client. Approximate 300-token chunks overlap by about 50 tokens, retain question/page/source metadata, and are stored in SQLite and a classroom-specific Chroma collection. Content hashes make uploads idempotent per classroom and resource kind.
 
@@ -96,7 +114,7 @@ The Gemini SDK's `response_schema` converter rejects numeric enum members. The r
 
 `DATA_DIR` is relative to the project folder unless absolute. SQLite (`app.db`), uploads, Chroma, models and Gemini cache files live beneath it. `.env` and the entire data directory are ignored by Git. Treat all these files as private: the cache contains prompts/results and the database contains transcripts. There is no automatic retention/deletion policy.
 
-This is a local demo with self-selected registration roles, not a deployed school identity system. Use dummy data only. Page images and text included in prompts are sent to Gemini. Do not deploy the demo server publicly.
+This is a local application with email/password accounts and self-selected registration roles. It does not integrate with a school's identity provider or verify teacher affiliation. Page images and text included in prompts are sent to Gemini. The server binds to localhost; public hosting needs a separate deployment and identity configuration.
 
 Peer similarity compares only different students in the same assignment, combining five-word MinHash and embedding cosine. It is a review signal, not a finding of misconduct. Short, formulaic answers can be similar for legitimate reasons. Teachers configure each classroom's threshold and decide how to respond. Students get a first-time warning for a flagged draft without peer names, passages or numeric similarity.
 
@@ -110,6 +128,6 @@ The real-model check is separate: `python scripts/check_retrieval.py`. It measur
 
 Real OCR, evidence quality and hint quality require live checks with your keys. Structured fields, source membership and quotations are validated; semantic correctness and whether a hint reveals too much still need human evaluation. Resource OCR treats unnumbered scanned material as Q1; explicit question headings improve retrieval. Uploads are limited to 30 MB and 100 unlocked PDF pages. Due dates use the laptop's local clock. Existing students must register before a teacher adds them by email. Rejected work is resubmitted as a new attempt.
 
-Schema tables are created automatically for a fresh local database. No migration framework is included. If you change the schema after creating a demo database, preserve any needed files and start with a fresh `DATA_DIR`.
+Schema tables are created automatically for a fresh local database. No migration framework is included. If you change the schema after creating a database, preserve any needed files and start with a fresh `DATA_DIR`.
 
 API integration follows the [Google Gen AI SDK](https://googleapis.github.io/python-genai/). Persistent vector storage follows the [Chroma Python client documentation](https://docs.trychroma.com/reference/python).

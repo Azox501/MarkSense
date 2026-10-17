@@ -1,7 +1,25 @@
 [browser]
 gatherUsageStats = false
 
+[client]
+toolbarMode = "minimal"
+
 [server]
 maxUploadSize = 30
 address = "127.0.0.1"
 headless = true
+runOnSave = true
+
+[theme]
+base = "light"
+primaryColor = "#216858"
+backgroundColor = "#F5F8F5"
+secondaryBackgroundColor = "#EDF2EC"
+textColor = "#203C35"
+font = "sans-serif"
+
+[theme.sidebar]
+backgroundColor = "#153B33"
+secondaryBackgroundColor = "#244D40"
+textColor = "#E8F1E5"
+primaryColor = "#D9EF9F"

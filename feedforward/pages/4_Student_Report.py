@@ -4,17 +4,17 @@ import streamlit as st
 
 from core.db import Assignment, Submission, session_scope
 from core.reports import student_report
-from core.ui import friendly_errors, guard
+from core.ui import empty_state, friendly_errors, guard, page_header
 
 st.set_page_config(page_title="MarkSense | My reports", layout="wide")
 student = guard("student")
-st.title("My feedback and reports")
+page_header("Feedback to move you forward.", "Find your draft hints, teacher-approved results, and a clear plan for what to revise next.", "STUDENT WORKSPACE")
 with session_scope() as session:
     attempts = list(session.scalars(select(Submission).where(Submission.student_id == student.id)
                                     .order_by(Submission.created_at.desc(), Submission.id.desc())))
     titles = {a.id:a.title for a in session.scalars(select(Assignment))}
 if not attempts:
-    st.info("Your draft hints and approved reports will appear here after you submit work.")
+    empty_state("Your progress belongs here", "Submit a draft for guidance, or a final attempt for your teacher to review.")
     st.stop()
 for attempt in attempts:
     with st.expander(f"{titles[attempt.assignment_id]} · {attempt.mode} · #{attempt.id} · {attempt.status}", expanded=attempt == attempts[0]):
