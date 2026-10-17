@@ -1,4 +1,8 @@
 .venv/
+.venv-langchain/
+.legacy/
+data/
+*.egg-info/
 __pycache__/
 .pytest_cache/
 .env
