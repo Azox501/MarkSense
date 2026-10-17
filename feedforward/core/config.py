@@ -4,7 +4,7 @@ from functools import lru_cache
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
 ROOT = Path(__file__).resolve().parents[1]
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
@@ -30,7 +30,12 @@ class Settings:
 @lru_cache(maxsize=2)
 def get_settings(require_keys: bool = True) -> Settings:
     """Load settings, failing clearly at app startup when a key is absent."""
-    load_dotenv(ROOT / ".env", override=False)
+    # dotenv_values keeps the last declaration in a local .env file. That lets a
+    # corrected key replace an older entry while explicit process environment
+    # variables still take priority for deployments and tests.
+    for name, value in dotenv_values(ROOT / ".env").items():
+        if value is not None:
+            os.environ.setdefault(name, value)
     vision = os.getenv("GEMINI_VISION_API_KEY", "").strip()
     grader = os.getenv("GEMINI_GRADER_API_KEY", "").strip()
     if require_keys:
