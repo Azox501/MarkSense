@@ -14,9 +14,9 @@ class WorkspacePage:
 def workspace_pages(role: str) -> tuple[WorkspacePage, ...]:
     """Return only routes belonging to the authenticated account role."""
     if role == "teacher":
-        return (WorkspacePage("pages/1_Teacher_Setup.py", "Classrooms & assignments", ":material/school:", "classrooms"),
-                WorkspacePage("pages/3_Teacher_Review.py", "Review & results", ":material/fact_check:", "review"))
+        return (WorkspacePage("pages/1_Teacher_Setup.py", "Manage classes", ":material/school:", "classes"),
+                WorkspacePage("pages/3_Teacher_Review.py", "To review", ":material/fact_check:", "review"))
     if role == "student":
-        return (WorkspacePage("pages/2_Student_Submit.py", "Submit work", ":material/upload_file:", "submit"),
-                WorkspacePage("pages/4_Student_Report.py", "My feedback", ":material/auto_stories:", "feedback"))
+        return (WorkspacePage("pages/2_Student_Submit.py", "Classwork", ":material/assignment:", "classwork"),
+                WorkspacePage("pages/4_Student_Report.py", "Grades & feedback", ":material/auto_stories:", "feedback"))
     raise AppError("This account does not have a recognized workspace role.")

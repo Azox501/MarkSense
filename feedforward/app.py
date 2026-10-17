@@ -36,7 +36,7 @@ if current is None:
 else:
     st.logo(str(ROOT / "assets" / "logo.svg"), size="large", icon_image=str(ROOT / "assets" / "mark.svg"))
     home = teacher_dashboard if current.role == "teacher" else student_dashboard
-    pages = [st.Page(home, title="Overview" if current.role == "teacher" else "My workspace",
+    pages = [st.Page(home, title="Classes",
                      icon=":material/space_dashboard:", default=True)]
     pages.extend(st.Page(spec.path, title=spec.title, icon=spec.icon, url_path=spec.url)
                  for spec in workspace_pages(current.role))

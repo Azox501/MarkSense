@@ -87,9 +87,8 @@ def ingest_resource(teacher: User, classroom_id: int, kind: str, filename: str, 
         for index, page in enumerate(document):
             text = page.get_text().strip()
             if len(text) < 20:
-                from core.transcribe import transcribe_images
-                transcript = transcribe_images([page.get_pixmap(dpi=200).tobytes("png")], resource=True)
-                text = "\n".join(a.question_id + "\n" + a.text for a in transcript.answers)
+                from core.local_ocr import recognize_image
+                text = recognize_image(page.get_pixmap(dpi=200).tobytes("png"))
             pages.append(text)
             progress(0.4 * (index + 1) / len(document))
     pieces = chunk_pages(pages)
